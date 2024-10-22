@@ -2,8 +2,8 @@ package auth
 
 import (
 	"context"
-	"errors"
-	"log/slog"
+
+	"github.com/pkg/errors"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -13,15 +13,13 @@ import (
 )
 
 type UserStorage interface {
-	CreateUser(ctx context.Context, email string, hPassword []byte, l *slog.Logger) (int64, error)
-	UserByEmail(ctx context.Context, email string, l *slog.Logger) (*models.User, error)
-	UserByID(ctx context.Context, id int64, l *slog.Logger) (*models.User, error)
-	UserCanLogInByEmail(ctx context.Context, email string, l *slog.Logger) (bool, error)
-	UserCanLogInById(ctx context.Context, id int64, l *slog.Logger) (bool, error)
+	CreateUser(ctx context.Context, email string, hPassword []byte) (int64, error)
+	UserByEmail(ctx context.Context, email string) (*models.User, error)
+	UserByID(ctx context.Context, id int64) (*models.User, error)
 }
 
 type TokenProvider interface {
-	NewPair(email string, id int64, l *slog.Logger) (*models.TokenPair, error)
+	NewPair(email string, id int64) (*models.TokenPair, error)
 	ParseRefresh(refreshToken string) (int64, error)
 }
 
@@ -37,77 +35,64 @@ func New(us UserStorage, tp TokenProvider) *Auth {
 	}
 }
 
-func (a *Auth) Register(ctx context.Context, email string, password string, l *slog.Logger) (int64, error) {
+func (a *Auth) Register(ctx context.Context, email string, password string) (int64, error) {
 	hPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		l.Error("unable to hash password", slog.String("error", err.Error()))
-		return 0, ErrFailedToRegisterUser
+		return 0, errors.Wrap(err, "failed to hash password")
 	}
-	id, err := a.us.CreateUser(ctx, email, hPassword, l)
+	id, err := a.us.CreateUser(ctx, email, hPassword)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserAlreadyExists) {
-			l.Info("user already exists")
 			return 0, ErrUserAlreadyExists
 		}
-		return 0, ErrFailedToRegisterUser
+		return 0, errors.Wrap(err, "failed create user")
 	}
 	return id, nil
 }
 
-func (a *Auth) Login(ctx context.Context, email string, password string, l *slog.Logger) (*models.TokenPair, error) {
-	u, err := a.us.UserByEmail(ctx, email, l)
+func (a *Auth) Login(ctx context.Context, email string, password string) (*models.TokenPair, error) {
+	u, err := a.us.UserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserDoesNotExist) {
-			l.Info("user does not exist")
-			return nil, ErrUserDoesNotExist
+			return nil, ErrInvalidLoginOrPassword
 		}
-		l.Error("unable to get user by email", slog.String("error", err.Error()))
-		return nil, ErrFailedToLogIn
+		return nil, errors.Wrap(err, "failed to get user by email")
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(u.HPassword), []byte(password))
 	if err != nil {
-		l.Info("invalid login or password")
 		return nil, ErrInvalidLoginOrPassword
 	}
 	if u.Banned || u.Deleted {
-		l.Info("user is banned or deleted")
 		return nil, ErrUserUnableToLogIn
 	}
-	tp, err := a.t.NewPair(u.Email, u.Id, l)
+	tp, err := a.t.NewPair(u.Email, u.Id)
 	if err != nil {
-		l.Info("unable to create token pair", slog.String("error", err.Error()))
-		return nil, ErrFailedToLogIn
+		return nil, errors.Wrap(err, "failed to create token pair")
 	}
 	return tp, nil
 }
 
-func (a *Auth) Refresh(ctx context.Context, refreshToken string, l *slog.Logger) (*models.TokenPair, error) {
+func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*models.TokenPair, error) {
 	id, err := a.t.ParseRefresh(refreshToken)
 	if err != nil {
 		if errors.Is(err, jwt.ErrInvalidToken) {
-			l.Info("invalid refresh token")
 			return nil, ErrInvalidRefreshToken
 		}
-		l.Error("unable to parse refresh token", slog.String("error", err.Error()))
-		return nil, ErrFailedToRefreshToken
+		return nil, errors.Wrap(err, "failed to parse refresh token")
 	}
-	u, err := a.us.UserByID(ctx, id, l)
+	u, err := a.us.UserByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserDoesNotExist) {
-			l.Info("user does not exist")
-			return nil, ErrUserDoesNotExist
+			return nil, ErrInvalidRefreshToken
 		}
-		l.Error("unable to get user by id", slog.String("error", err.Error()))
-		return nil, ErrFailedToRefreshToken
+		return nil, errors.Wrap(err, "failed to get user by id")
 	}
 	if u.Banned || u.Deleted {
-		l.Info("user is banned or deleted")
 		return nil, ErrUserUnableToLogIn
 	}
-	tp, err := a.t.NewPair(u.Email, u.Id, l)
+	tp, err := a.t.NewPair(u.Email, u.Id)
 	if err != nil {
-		l.Info("unable to create token pair", slog.String("error", err.Error()))
-		return nil, ErrFailedToRefreshToken
+		return nil, errors.Wrap(err, "failed to create token pair")
 	}
 	return tp, nil
 }

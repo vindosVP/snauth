@@ -1,10 +1,10 @@
 package jwt
 
 import (
-	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/pkg/errors"
 
 	"github.com/vindosVP/snauth/internal/models"
 )
@@ -41,21 +41,19 @@ func (p *TokenProvider) ParseRefresh(refreshToken string) (int64, error) {
 	return claims.Id, nil
 }
 
-func (p *TokenProvider) NewPair(email string, id int64, l *slog.Logger) (*models.TokenPair, error) {
+func (p *TokenProvider) NewPair(email string, id int64) (*models.TokenPair, error) {
 	accessClaims := p.newAccessClaims(email, id)
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	accessString, err := accessToken.SignedString(p.secret)
 	if err != nil {
-		l.Error("Error signing access token", slog.String("error", err.Error()))
-		return nil, ErrFailedToCreateTokens
+		return nil, errors.Wrap(err, "failed to sign access token")
 	}
 
 	refreshClaims := p.newRefreshClaims(id)
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	refreshString, err := refreshToken.SignedString(p.secret)
 	if err != nil {
-		l.Error("Error signing refresh token", slog.String("error", err.Error()))
-		return nil, ErrFailedToCreateTokens
+		return nil, errors.Wrap(err, "failed to sign refresh token")
 	}
 
 	return &models.TokenPair{

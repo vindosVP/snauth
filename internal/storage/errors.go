@@ -1,10 +1,8 @@
 package storage
 
-import "errors"
+import "github.com/pkg/errors"
 
 var (
-	ErrUserAlreadyExists  = errors.New("user with this email already exists")
-	ErrFailedToCreateUser = errors.New("failed to create user")
-	ErrUserDoesNotExist   = errors.New("user does not exist")
-	ErrFailedToGetUser    = errors.New("failed to get user")
+	ErrUserAlreadyExists = errors.New("user with this email already exists")
+	ErrUserDoesNotExist  = errors.New("user does not exist")
 )

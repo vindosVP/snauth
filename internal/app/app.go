@@ -3,9 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog"
 
 	"github.com/vindosVP/snauth/cmd/config"
 	"github.com/vindosVP/snauth/internal/app/grpc"
@@ -19,7 +19,7 @@ type App struct {
 	GRPCServer *grpc.App
 }
 
-func New(log *slog.Logger, cfg *config.Config) *App {
+func New(log zerolog.Logger, cfg *config.Config) *App {
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, postgresConn(cfg))
 	if err != nil {

@@ -1,9 +1,7 @@
 package jwt
 
-import "errors"
+import "github.com/pkg/errors"
 
 var (
-	ErrFailedToCreateTokens = errors.New("failed to create tokens")
-	ErrInvalidToken         = errors.New("invalid token")
-	ErrFailedToParseToken   = errors.New("failed to parse token")
+	ErrInvalidToken = errors.New("invalid token")
 )
