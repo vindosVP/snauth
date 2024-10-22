@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,9 +17,6 @@ var (
 )
 
 func main() {
-	fmt.Println(buildCommit)
-	fmt.Println(buildTime)
-	fmt.Println(version)
 	cfg := config.MustParse()
 	l := logger.SetupLogger(cfg.Logger.ENV, cfg.ServiceName)
 
