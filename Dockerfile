@@ -6,7 +6,7 @@ RUN adduser app -u 1001 -D -G app /home/app
 FROM golang:1.22 AS builder
 WORKDIR /app
 COPY --from=root-certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs
-COPY . .
+RUN git clone https://github.com/vindosVP/snauth.git .
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-X main.buildCommit=$(git rev-list -1 HEAD) -X main.buildTime=$(date -u '+%Y-%m-%d_%I:%M:%S%p') -X main.version=$(git describe --tags --abbrev=0)" -o ./snauth ./cmd/main.go
 
