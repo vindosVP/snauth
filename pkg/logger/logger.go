@@ -29,5 +29,5 @@ func SetupLogger(env string, serviceName string) zerolog.Logger {
 		zl = zerolog.New(os.Stdout)
 		zl.Level(zerolog.Disabled)
 	}
-	return zl.With().Timestamp().Str("service", serviceName).Str("env", env).Logger()
+	return zl.With().Timestamp().Str("service", serviceName).Logger()
 }

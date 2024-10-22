@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,9 +11,25 @@ import (
 	"github.com/vindosVP/snauth/pkg/logger"
 )
 
+var (
+	buildCommit = "N/A"
+	buildTime   = "N/A"
+	version     = "N/A"
+)
+
 func main() {
+	fmt.Println(buildCommit)
+	fmt.Println(buildTime)
+	fmt.Println(version)
 	cfg := config.MustParse()
 	l := logger.SetupLogger(cfg.Logger.ENV, cfg.ServiceName)
+
+	l.Info().Str("env", cfg.Logger.ENV).
+		Str("buildCommit", buildCommit).
+		Str("buildTime", buildTime).
+		Str("version", version).
+		Msg("starting service")
+
 	l.Info().Interface("config", cfg).Msg("configuration loaded")
 
 	a := app.New(l, cfg)
