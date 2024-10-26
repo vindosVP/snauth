@@ -16,10 +16,13 @@ type UserStorage interface {
 	CreateUser(ctx context.Context, email string, hPassword []byte) (int64, error)
 	UserByEmail(ctx context.Context, email string) (*models.User, error)
 	UserByID(ctx context.Context, id int64) (*models.User, error)
+	SetDeletedToUser(ctx context.Context, userId int64, isDeleted bool) (bool, error)
+	SetBannedToUser(ctx context.Context, userId int64, isBanned bool) (bool, error)
+	SetAdminToUser(ctx context.Context, userId int64, isAdmin bool) (bool, error)
 }
 
 type TokenProvider interface {
-	NewPair(email string, id int64) (*models.TokenPair, error)
+	NewPair(email string, id int64, isAdmin bool) (*models.TokenPair, error)
 	ParseRefresh(refreshToken string) (int64, error)
 }
 
@@ -33,6 +36,51 @@ func New(us UserStorage, tp TokenProvider) *Auth {
 		us: us,
 		t:  tp,
 	}
+}
+
+func (a *Auth) SetDeleted(ctx context.Context, id int64, deleted bool) (bool, error) {
+	_, err := a.us.UserByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, storage.ErrUserDoesNotExist) {
+			return false, ErrUserDoesNotExist
+		}
+		return false, errors.Wrap(err, "failed to get user by id")
+	}
+	isDeleted, err := a.us.SetDeletedToUser(ctx, id, deleted)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to set deleted to user")
+	}
+	return isDeleted, nil
+}
+
+func (a *Auth) SetBanned(ctx context.Context, id int64, banned bool) (bool, error) {
+	_, err := a.us.UserByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, storage.ErrUserDoesNotExist) {
+			return false, ErrUserDoesNotExist
+		}
+		return false, errors.Wrap(err, "failed to get user by id")
+	}
+	isBanned, err := a.us.SetBannedToUser(ctx, id, banned)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to set banned to user")
+	}
+	return isBanned, nil
+}
+
+func (a *Auth) SetAdmin(ctx context.Context, id int64, admin bool) (bool, error) {
+	_, err := a.us.UserByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, storage.ErrUserDoesNotExist) {
+			return false, ErrUserDoesNotExist
+		}
+		return false, errors.Wrap(err, "failed to get user by id")
+	}
+	isAdmin, err := a.us.SetAdminToUser(ctx, id, admin)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to set admin to user")
+	}
+	return isAdmin, nil
 }
 
 func (a *Auth) Register(ctx context.Context, email string, password string) (int64, error) {
@@ -62,10 +110,10 @@ func (a *Auth) Login(ctx context.Context, email string, password string) (*model
 	if err != nil {
 		return nil, ErrInvalidLoginOrPassword
 	}
-	if u.Banned || u.Deleted {
+	if u.IsBanned || u.IsDeleted {
 		return nil, ErrUserUnableToLogIn
 	}
-	tp, err := a.t.NewPair(u.Email, u.Id)
+	tp, err := a.t.NewPair(u.Email, u.Id, u.IsAdmin)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create token pair")
 	}
@@ -87,10 +135,10 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*models.TokenP
 		}
 		return nil, errors.Wrap(err, "failed to get user by id")
 	}
-	if u.Banned || u.Deleted {
+	if u.IsBanned || u.IsDeleted {
 		return nil, ErrUserUnableToLogIn
 	}
-	tp, err := a.t.NewPair(u.Email, u.Id)
+	tp, err := a.t.NewPair(u.Email, u.Id, u.IsAdmin)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create token pair")
 	}

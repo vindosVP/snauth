@@ -7,6 +7,7 @@ type User struct {
 	Email     string
 	HPassword string
 	CreatedAt time.Time
-	Banned    bool
-	Deleted   bool
+	IsBanned  bool
+	IsDeleted bool
+	IsAdmin   bool
 }

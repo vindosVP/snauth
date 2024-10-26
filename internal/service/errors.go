@@ -7,4 +7,5 @@ var (
 	ErrInvalidLoginOrPassword = errors.New("invalid login or password")
 	ErrInvalidRefreshToken    = errors.New("invalid refresh token")
 	ErrUserUnableToLogIn      = errors.New("user is unable to log in")
+	ErrUserDoesNotExist       = errors.New("user does not exist")
 )

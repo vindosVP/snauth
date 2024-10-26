@@ -32,8 +32,41 @@ message RefreshResponse {
   string refreshToken = 2;
 }
 
+message SetDeletedRequest {
+  int64 user_id = 1;
+  bool isDeleted = 2;
+}
+
+message SetDeletedResponse {
+  int64 user_id = 1;
+  bool isDeleted = 2;
+}
+
+message SetBannedRequest {
+  int64 user_id = 1;
+  bool isBanned = 2;
+}
+
+message SetBannedResponse {
+  int64 user_id = 1;
+  bool isBanned = 2;
+}
+
+message SetAdminRightsRequest {
+  int64 user_id = 1;
+  bool isAdmin = 2;
+}
+
+message SetAdminRightsResponse {
+  int64 user_id = 1;
+  bool isAdmin = 2;
+}
+
 service Auth {
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc Login (LoginRequest) returns (LoginResponse);
   rpc Refresh (RefreshRequest) returns (RefreshResponse);
+  rpc SetDeleted (SetDeletedRequest) returns (SetDeletedResponse);
+  rpc SetBanned (SetBannedRequest) returns (SetBannedResponse);
+  rpc SetAdminRights (SetAdminRightsRequest) returns (SetAdminRightsResponse);
 }

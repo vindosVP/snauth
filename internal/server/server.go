@@ -20,6 +20,9 @@ type Auth interface {
 	Register(ctx context.Context, email string, password string) (int64, error)
 	Login(ctx context.Context, email string, password string) (*models.TokenPair, error)
 	Refresh(ctx context.Context, refreshToken string) (*models.TokenPair, error)
+	SetDeleted(ctx context.Context, id int64, deleted bool) (bool, error)
+	SetBanned(ctx context.Context, id int64, banned bool) (bool, error)
+	SetAdmin(ctx context.Context, id int64, admin bool) (bool, error)
 }
 
 type server struct {
@@ -42,6 +45,69 @@ func requestID(ctx context.Context) (string, error) {
 		return "", errors.New("no request id")
 	}
 	return MDreqId[0], nil
+}
+
+func (s *server) SetBanned(ctx context.Context, in *authv1.SetBannedRequest) (*authv1.SetBannedResponse, error) {
+	reqId, err := requestID(ctx)
+	if err != nil {
+		s.l.Error().Err(err).Msg("failed to extract request ID")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	l := s.l.With().Str("requestID", reqId).Int64("userId", in.GetUserId()).Bool("isBanned", in.GetIsBanned()).Logger()
+	l.Info().Msg("setting banned flag to user")
+	isBanned, err := s.auth.SetBanned(ctx, in.GetUserId(), in.GetIsBanned())
+	if err != nil {
+		if errors.Is(err, auth.ErrUserDoesNotExist) {
+			l.Info().Msg("user does not exist")
+			return nil, status.Error(codes.FailedPrecondition, err.Error())
+		}
+		l.Error().Stack().Err(err).Msg("failed to set banned flag to user")
+		return nil, status.Error(codes.Internal, "failed to set banned flag to user")
+	}
+	l.Info().Msg("set banned flag to user successfully")
+	return &authv1.SetBannedResponse{IsBanned: isBanned, UserId: in.GetUserId()}, nil
+}
+
+func (s *server) SetAdminRights(ctx context.Context, in *authv1.SetAdminRightsRequest) (*authv1.SetAdminRightsResponse, error) {
+	reqId, err := requestID(ctx)
+	if err != nil {
+		s.l.Error().Err(err).Msg("failed to extract request ID")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	l := s.l.With().Str("requestID", reqId).Int64("userId", in.GetUserId()).Bool("isAdmin", in.GetIsAdmin()).Logger()
+	l.Info().Msg("setting admin flag to user")
+	isAdmin, err := s.auth.SetAdmin(ctx, in.GetUserId(), in.GetIsAdmin())
+	if err != nil {
+		if errors.Is(err, auth.ErrUserDoesNotExist) {
+			l.Info().Msg("user does not exist")
+			return nil, status.Error(codes.FailedPrecondition, err.Error())
+		}
+		l.Error().Stack().Err(err).Msg("failed to set admin flag to user")
+		return nil, status.Error(codes.Internal, "failed to set admin flag to user")
+	}
+	l.Info().Msg("set admin flag to user successfully")
+	return &authv1.SetAdminRightsResponse{IsAdmin: isAdmin, UserId: in.GetUserId()}, nil
+}
+
+func (s *server) SetDeleted(ctx context.Context, in *authv1.SetDeletedRequest) (*authv1.SetDeletedResponse, error) {
+	reqId, err := requestID(ctx)
+	if err != nil {
+		s.l.Error().Err(err).Msg("failed to extract request ID")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	l := s.l.With().Str("requestID", reqId).Int64("userId", in.GetUserId()).Bool("isDeleted", in.GetIsDeleted()).Logger()
+	l.Info().Msg("setting deleted flag to user")
+	isDeleted, err := s.auth.SetDeleted(ctx, in.GetUserId(), in.GetIsDeleted())
+	if err != nil {
+		if errors.Is(err, auth.ErrUserDoesNotExist) {
+			l.Info().Msg("user does not exist")
+			return nil, status.Error(codes.FailedPrecondition, err.Error())
+		}
+		l.Error().Stack().Err(err).Msg("failed to set deleted flag to user")
+		return nil, status.Error(codes.Internal, "failed to set deleted flag to user")
+	}
+	l.Info().Msg("set deleted flag to user successfully")
+	return &authv1.SetDeletedResponse{IsDeleted: isDeleted, UserId: in.GetUserId()}, nil
 }
 
 func (s *server) Register(ctx context.Context, in *authv1.RegisterRequest) (*authv1.RegisterResponse, error) {

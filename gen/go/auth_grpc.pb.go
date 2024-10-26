@@ -19,9 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	Auth_Register_FullMethodName = "/auth.Auth/Register"
-	Auth_Login_FullMethodName    = "/auth.Auth/Login"
-	Auth_Refresh_FullMethodName  = "/auth.Auth/Refresh"
+	Auth_Register_FullMethodName       = "/auth.Auth/Register"
+	Auth_Login_FullMethodName          = "/auth.Auth/Login"
+	Auth_Refresh_FullMethodName        = "/auth.Auth/Refresh"
+	Auth_SetDeleted_FullMethodName     = "/auth.Auth/SetDeleted"
+	Auth_SetBanned_FullMethodName      = "/auth.Auth/SetBanned"
+	Auth_SetAdminRights_FullMethodName = "/auth.Auth/SetAdminRights"
 )
 
 // AuthClient is the client API for Auth service.
@@ -31,6 +34,9 @@ type AuthClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error)
+	SetDeleted(ctx context.Context, in *SetDeletedRequest, opts ...grpc.CallOption) (*SetDeletedResponse, error)
+	SetBanned(ctx context.Context, in *SetBannedRequest, opts ...grpc.CallOption) (*SetBannedResponse, error)
+	SetAdminRights(ctx context.Context, in *SetAdminRightsRequest, opts ...grpc.CallOption) (*SetAdminRightsResponse, error)
 }
 
 type authClient struct {
@@ -71,6 +77,36 @@ func (c *authClient) Refresh(ctx context.Context, in *RefreshRequest, opts ...gr
 	return out, nil
 }
 
+func (c *authClient) SetDeleted(ctx context.Context, in *SetDeletedRequest, opts ...grpc.CallOption) (*SetDeletedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetDeletedResponse)
+	err := c.cc.Invoke(ctx, Auth_SetDeleted_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) SetBanned(ctx context.Context, in *SetBannedRequest, opts ...grpc.CallOption) (*SetBannedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetBannedResponse)
+	err := c.cc.Invoke(ctx, Auth_SetBanned_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) SetAdminRights(ctx context.Context, in *SetAdminRightsRequest, opts ...grpc.CallOption) (*SetAdminRightsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetAdminRightsResponse)
+	err := c.cc.Invoke(ctx, Auth_SetAdminRights_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServer is the server API for Auth service.
 // All implementations must embed UnimplementedAuthServer
 // for forward compatibility
@@ -78,6 +114,9 @@ type AuthServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error)
+	SetDeleted(context.Context, *SetDeletedRequest) (*SetDeletedResponse, error)
+	SetBanned(context.Context, *SetBannedRequest) (*SetBannedResponse, error)
+	SetAdminRights(context.Context, *SetAdminRightsRequest) (*SetAdminRightsResponse, error)
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -93,6 +132,15 @@ func (UnimplementedAuthServer) Login(context.Context, *LoginRequest) (*LoginResp
 }
 func (UnimplementedAuthServer) Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Refresh not implemented")
+}
+func (UnimplementedAuthServer) SetDeleted(context.Context, *SetDeletedRequest) (*SetDeletedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDeleted not implemented")
+}
+func (UnimplementedAuthServer) SetBanned(context.Context, *SetBannedRequest) (*SetBannedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetBanned not implemented")
+}
+func (UnimplementedAuthServer) SetAdminRights(context.Context, *SetAdminRightsRequest) (*SetAdminRightsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAdminRights not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 
@@ -161,6 +209,60 @@ func _Auth_Refresh_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_SetDeleted_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetDeletedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).SetDeleted(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_SetDeleted_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).SetDeleted(ctx, req.(*SetDeletedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_SetBanned_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetBannedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).SetBanned(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_SetBanned_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).SetBanned(ctx, req.(*SetBannedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_SetAdminRights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetAdminRightsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).SetAdminRights(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_SetAdminRights_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).SetAdminRights(ctx, req.(*SetAdminRightsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Auth_ServiceDesc is the grpc.ServiceDesc for Auth service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -179,6 +281,18 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Refresh",
 			Handler:    _Auth_Refresh_Handler,
+		},
+		{
+			MethodName: "SetDeleted",
+			Handler:    _Auth_SetDeleted_Handler,
+		},
+		{
+			MethodName: "SetBanned",
+			Handler:    _Auth_SetBanned_Handler,
+		},
+		{
+			MethodName: "SetAdminRights",
+			Handler:    _Auth_SetAdminRights_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

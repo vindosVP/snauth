@@ -41,8 +41,8 @@ func (p *TokenProvider) ParseRefresh(refreshToken string) (int64, error) {
 	return claims.Id, nil
 }
 
-func (p *TokenProvider) NewPair(email string, id int64) (*models.TokenPair, error) {
-	accessClaims := p.newAccessClaims(email, id)
+func (p *TokenProvider) NewPair(email string, id int64, isAdmin bool) (*models.TokenPair, error) {
+	accessClaims := p.newAccessClaims(email, id, isAdmin)
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	accessString, err := accessToken.SignedString(p.secret)
 	if err != nil {
@@ -64,19 +64,21 @@ func (p *TokenProvider) NewPair(email string, id int64) (*models.TokenPair, erro
 
 type Claims struct {
 	jwt.RegisteredClaims
-	Email string `json:"email,omitempty"`
-	Id    int64  `json:"id"`
+	Email   string `json:"email,omitempty"`
+	Id      int64  `json:"id"`
+	IsAdmin bool   `json:"isAdmin,omitempty"`
 }
 
-func (p *TokenProvider) newAccessClaims(email string, id int64) *Claims {
+func (p *TokenProvider) newAccessClaims(email string, id int64, isAdmin bool) *Claims {
 	return &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    p.serviceName,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(p.tokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
-		Email: email,
-		Id:    id,
+		Email:   email,
+		Id:      id,
+		IsAdmin: isAdmin,
 	}
 }
 
