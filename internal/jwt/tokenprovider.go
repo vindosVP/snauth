@@ -66,7 +66,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 	Email   string `json:"email,omitempty"`
 	Id      int64  `json:"id"`
-	IsAdmin bool   `json:"isAdmin,omitempty"`
+	IsAdmin *bool  `json:"isAdmin,omitempty"`
 }
 
 func (p *TokenProvider) newAccessClaims(email string, id int64, isAdmin bool) *Claims {
@@ -78,7 +78,7 @@ func (p *TokenProvider) newAccessClaims(email string, id int64, isAdmin bool) *C
 		},
 		Email:   email,
 		Id:      id,
-		IsAdmin: isAdmin,
+		IsAdmin: &isAdmin,
 	}
 }
 
