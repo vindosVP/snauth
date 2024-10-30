@@ -59,7 +59,7 @@ func (s *server) SetBanned(ctx context.Context, in *authv1.SetBannedRequest) (*a
 	if err != nil {
 		if errors.Is(err, auth.ErrUserDoesNotExist) {
 			l.Info().Msg("user does not exist")
-			return nil, status.Error(codes.FailedPrecondition, err.Error())
+			return nil, status.Error(codes.FailedPrecondition, "user does not exist")
 		}
 		l.Error().Stack().Err(err).Msg("failed to set banned flag to user")
 		return nil, status.Error(codes.Internal, "failed to set banned flag to user")
@@ -80,7 +80,7 @@ func (s *server) SetAdminRights(ctx context.Context, in *authv1.SetAdminRightsRe
 	if err != nil {
 		if errors.Is(err, auth.ErrUserDoesNotExist) {
 			l.Info().Msg("user does not exist")
-			return nil, status.Error(codes.FailedPrecondition, err.Error())
+			return nil, status.Error(codes.FailedPrecondition, "user does not exist")
 		}
 		l.Error().Stack().Err(err).Msg("failed to set admin flag to user")
 		return nil, status.Error(codes.Internal, "failed to set admin flag to user")
@@ -101,7 +101,7 @@ func (s *server) SetDeleted(ctx context.Context, in *authv1.SetDeletedRequest) (
 	if err != nil {
 		if errors.Is(err, auth.ErrUserDoesNotExist) {
 			l.Info().Msg("user does not exist")
-			return nil, status.Error(codes.FailedPrecondition, err.Error())
+			return nil, status.Error(codes.FailedPrecondition, "user does not exist")
 		}
 		l.Error().Stack().Err(err).Msg("failed to set deleted flag to user")
 		return nil, status.Error(codes.Internal, "failed to set deleted flag to user")
@@ -122,7 +122,7 @@ func (s *server) Register(ctx context.Context, in *authv1.RegisterRequest) (*aut
 	if err != nil {
 		if errors.Is(err, auth.ErrUserAlreadyExists) {
 			l.Info().Msg("user already exists")
-			return nil, status.Error(codes.FailedPrecondition, err.Error())
+			return nil, status.Error(codes.FailedPrecondition, "user already exists")
 		}
 		l.Error().Stack().Err(err).Msg("failed to register user")
 		return nil, status.Error(codes.Internal, "failed to register user")
@@ -143,11 +143,11 @@ func (s *server) Login(ctx context.Context, in *authv1.LoginRequest) (*authv1.Lo
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidLoginOrPassword) {
 			l.Info().Msg("invalid login or password")
-			return nil, status.Error(codes.InvalidArgument, err.Error())
+			return nil, status.Error(codes.InvalidArgument, "invalid login or password")
 		}
 		if errors.Is(err, auth.ErrUserUnableToLogIn) {
 			l.Info().Msg("user is deleted or banned")
-			return nil, status.Error(codes.FailedPrecondition, err.Error())
+			return nil, status.Error(codes.FailedPrecondition, "user is deleted or banned")
 		}
 		l.Error().Stack().Err(err).Msg("failed to log in user")
 		return nil, status.Error(codes.Internal, "failed to log in user")
@@ -163,7 +163,7 @@ func (s *server) Refresh(ctx context.Context, in *authv1.RefreshRequest) (*authv
 	reqId, err := requestID(ctx)
 	if err != nil {
 		s.l.Error().Err(err).Msg("failed to extract request ID")
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, status.Error(codes.InvalidArgument, "failed to extract request ID")
 	}
 	l := s.l.With().Str("requestID", reqId).Logger()
 	l.Info().Msg("refreshing token")
@@ -171,11 +171,11 @@ func (s *server) Refresh(ctx context.Context, in *authv1.RefreshRequest) (*authv
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidRefreshToken) {
 			l.Info().Msg("invalid refresh token")
-			return nil, status.Error(codes.InvalidArgument, err.Error())
+			return nil, status.Error(codes.InvalidArgument, "invalid refresh token")
 		}
 		if errors.Is(err, auth.ErrUserUnableToLogIn) {
 			l.Info().Msg("unable to refresh token")
-			return nil, status.Error(codes.FailedPrecondition, err.Error())
+			return nil, status.Error(codes.FailedPrecondition, "unable to refresh token")
 		}
 		l.Error().Stack().Err(err).Msg("failed to refresh token")
 		return nil, status.Error(codes.Internal, "failed to refresh token")
